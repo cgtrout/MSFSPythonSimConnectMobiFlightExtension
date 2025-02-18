@@ -17,7 +17,7 @@ def setupLogging(logFileName):
 # MAIN
 setupLogging("SimConnectMobiFlight.log")
 sm = SimConnectMobiFlight()
-vr = MobiFlightVariableRequests(sm)
+vr = MobiFlightVariableRequests(sm, "test_client")
 vr.clear_sim_variables()
 
 # Example write variable
