@@ -1,6 +1,8 @@
 import logging, logging.handlers
 import ctypes
 from ctypes import wintypes
+import sys
+import traceback
 from SimConnect import SimConnect
 from SimConnect.Enum import SIMCONNECT_CLIENT_DATA_ID, SIMCONNECT_RECV_ID, SIMCONNECT_RECV_CLIENT_DATA
 
@@ -31,9 +33,30 @@ class SimConnectMobiFlight(SimConnect):
 
     def my_dispatch_proc(self, pData, cbData, pContext):
         dwID = pData.contents.dwID
+
         if dwID == SIMCONNECT_RECV_ID.SIMCONNECT_RECV_ID_CLIENT_DATA:
-            client_data = ctypes.cast(pData, ctypes.POINTER(SIMCONNECT_RECV_CLIENT_DATA)).contents
-            for handler in self.client_data_handlers:
-                handler(client_data)
+            try:
+                original_client_data_ptr = ctypes.cast(pData, ctypes.POINTER(SIMCONNECT_RECV_CLIENT_DATA))
+
+                # Copy memory
+                dwSize = original_client_data_ptr.contents.dwSize
+                client_data_copy = SIMCONNECT_RECV_CLIENT_DATA()
+                ctypes.memmove(
+                    ctypes.addressof(client_data_copy),
+                    ctypes.addressof(original_client_data_ptr.contents),
+                    dwSize
+                )
+
+                # Call handlers with copied data
+                for handler in self.client_data_handlers:
+                    handler(client_data_copy)
+
+            except OSError as e:
+                # Error here is not currently recoverable, so exit with log
+                print(f"[FATAL ERROR] my_dispatch_proc: Access violation in memmove: {e}")
+                print("Exception details below:")
+                print(traceback.format_exc())
+                sys.exit(1)
+
         else:
             super().my_dispatch_proc(pData, cbData, pContext)
