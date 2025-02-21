@@ -195,7 +195,7 @@ class MobiFlightVariableRequests:
             raise RuntimeError(f"Failed to subscribe to data changes for data_area_id={data_area_id}. HRESULT: {result}")
 
     def clear_sim_variables(self):
-        print("clear_sim_variables")
+        #print("clear_sim_variables")
         self.sim_vars.clear()
         self.sim_var_name_to_id.clear()
         self.send_command("MF.SimVars.Clear", self.my_client)
